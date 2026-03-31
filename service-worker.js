@@ -1,7 +1,7 @@
 const CACHE_NAME = "gov24-id-pwa-v1";
 const URLS_TO_CACHE = [
   "./",
-  "./민증.html",
+  "./Index.html",
   "./manifest.json",
   "./icons/icon-192.svg",
   "./icons/icon-512.svg"
