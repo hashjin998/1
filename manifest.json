@@ -2,7 +2,7 @@
   "name": "정부24 모바일 신분증",
   "short_name": "정부24 신분증",
   "description": "안드로이드 홈 화면에서 실행하는 모바일 신분증 웹앱",
-  "start_url": "./민증.html",
+  "start_url": "./Index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
