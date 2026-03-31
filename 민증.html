@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0050b3">
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<title>정부24</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#f5f5f5;
+  font-family:sans-serif;
+}
+
+.header{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:15px;
+  font-weight:bold;
+  position:relative;
+}
+
+.menu{
+  position:absolute;
+  right:15px;
+}
+
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:30px;
+  margin-bottom:10px;
+}
+
+.active{
+  border-bottom:2px solid black;
+}
+
+.card{
+  background:#fff;
+  margin:15px;
+  border-radius:20px;
+  padding:20px;
+  position:relative;
+  min-height:420px;
+}
+
+.photo{
+  width:150px;
+  height:150px;
+  border-radius:15px;
+  display:block;
+  margin:0 auto;
+  object-fit:cover;
+  background:#ddd;
+}
+
+.name{
+  font-weight:bold;
+  margin-top:15px;
+}
+
+#qr{
+  position:absolute;
+  right:20px;
+  bottom:20px;
+}
+
+.bottom-area{
+  margin:20px;
+}
+
+.bar{
+  height:6px;
+  background:#ddd;
+  border-radius:10px;
+}
+
+.bar-inner{
+  height:100%;
+  background:linear-gradient(to right,blue,purple);
+  width:100%;
+}
+
+.btn{
+  background:#000;
+  color:#fff;
+  text-align:center;
+  padding:15px;
+  border-radius:10px;
+  margin-top:15px;
+}
+
+#settings{
+  display:none;
+  padding:20px;
+}
+
+input{
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header" onclick="tap()">
+  정부24
+  <div class="menu">≡</div>
+</div>
+
+<div class="tabs">
+  <div class="active">주민등록증</div>
+  <div onclick="license()">운전면허증</div>
+</div>
+
+<div class="card" id="card">
+  <img id="img" class="photo">
+
+  <div class="name" id="name"></div>
+  <div id="dob"></div>
+  <div id="addr"></div>
+
+  <div id="qr"></div>
+</div>
+
+<div class="bottom-area">
+  <div id="time">30초</div>
+
+  <div class="bar">
+    <div id="bar" class="bar-inner"></div>
+  </div>
+
+  <div class="btn" id="btn" onclick="toggle()">QR 표시</div>
+</div>
+
+<div id="settings">
+  <div style="display:flex;justify-content:space-between">
+    <h3>설정</h3>
+    <div>이걸만든성현우</div>
+  </div>
+
+  이름 <input id="setName">
+  생년월일 앞 <input id="setDob1">
+  생년월일 뒤 <input id="setDob2">
+  주소 <input id="setAddr">
+  사진 <input type="file" id="setImg">
+
+  <button onclick="save()">저장</button>
+</div>
+
+<script>
+
+/* 🔥 저장값 (localStorage) */
+let savedName = localStorage.getItem("name") || "홍길동";
+let savedDob1 = localStorage.getItem("dob1") || "20000101";
+let savedDob2 = localStorage.getItem("dob2") || "1234567";
+let savedAddr = localStorage.getItem("addr") || "서울시 강남구";
+let savedImg = localStorage.getItem("img") || "";
+
+let isQR=false;
+let tapCount=0;
+
+/* 초기 로드 */
+window.onload = function(){
+  document.getElementById("name").innerText = savedName;
+  document.getElementById("dob").innerText = savedDob1 + "-" + savedDob2;
+  document.getElementById("addr").innerText = savedAddr;
+
+  if(savedImg){
+    document.getElementById("img").src = savedImg;
+  }
+};
+
+/* 5번 설정 */
+function tap(){
+  tapCount++;
+  if(tapCount===5){
+    document.getElementById("card").style.display="none";
+    document.querySelector(".bottom-area").style.display="none";
+    document.getElementById("settings").style.display="block";
+    tapCount=0;
+  }
+}
+
+/* 저장 */
+function save(){
+  savedName = document.getElementById("setName").value || savedName;
+  savedDob1 = document.getElementById("setDob1").value || savedDob1;
+  savedDob2 = document.getElementById("setDob2").value || savedDob2;
+  savedAddr = document.getElementById("setAddr").value || savedAddr;
+
+  localStorage.setItem("name", savedName);
+  localStorage.setItem("dob1", savedDob1);
+  localStorage.setItem("dob2", savedDob2);
+  localStorage.setItem("addr", savedAddr);
+
+  document.getElementById("name").innerText = savedName;
+  document.getElementById("dob").innerText = savedDob1+"-"+savedDob2;
+  document.getElementById("addr").innerText = savedAddr;
+
+  const file=document.getElementById("setImg").files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      document.getElementById("img").src=e.target.result;
+      localStorage.setItem("img", e.target.result); /* 🔥 사진 저장 */
+    }
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById("card").style.display="block";
+  document.querySelector(".bottom-area").style.display="block";
+  document.getElementById("settings").style.display="none";
+}
+
+/* QR */
+function makeQR(){
+  const qr=document.getElementById("qr");
+  qr.innerHTML="";
+  new QRCode(qr,{
+    text:"QR-ID",
+    width:110,
+    height:110
+  });
+}
+
+/* 토글 */
+function toggle(){
+  const qr=document.getElementById("qr");
+  const dob=document.getElementById("dob");
+  const addr=document.getElementById("addr");
+  const btn=document.getElementById("btn");
+
+  if(!isQR){
+    makeQR();
+    qr.style.display="block";
+
+    dob.innerText=savedDob1+"-******";
+    addr.innerText="********";
+
+    btn.innerText="상세정보 표시";
+    isQR=true;
+
+  }else{
+    qr.style.display="none";
+
+    dob.innerText=savedDob1+"-"+savedDob2;
+    addr.innerText=savedAddr;
+
+    btn.innerText="QR 표시";
+    isQR=false;
+  }
+}
+
+/* 타이머 */
+let t=30;
+setInterval(()=>{
+  t--;
+  if(t<0) t=30;
+
+  document.getElementById("time").innerText=t+"초";
+  document.getElementById("bar").style.width=(t/30*100)+"%";
+},1000);
+
+/* 운전면허 */
+function license(){
+  alert("운전면허증 등록이 안되어있습니다");
+}
+
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch((error) => console.error("SW 등록 실패:", error));
+  });
+}
+</script>
+
+</body>
+</html>
